@@ -174,3 +174,16 @@ msort xs = merge (msort firstHalf) (msort secondHalf)
         firstHalf = take half xs
         secondHalf = drop half xs
         half = length xs `div` 2
+
+-- Using the five-step process, construct the library functions that:
+-- a. calculate the sum of a list of numbers;
+sum2 [xs] = xs
+sum2 (x:xs) = x+sum2(xs)
+
+-- b. take a given number of elements from the start of a list;
+take2 0 _ = []
+take2 n (x:xs) = x : take2 (n-1) xs
+
+-- c. select the last element of a non-empty list.
+selectLast [x] = x
+selectLast (x:xs) = selectLast xs
