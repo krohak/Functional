@@ -1,4 +1,5 @@
 module HigherOrderFunctions where
+import Data.Char
 
 
 -- Formally speaking, a function that takes a function as an argument 
@@ -30,13 +31,13 @@ map2 f (x:xs) = f x : map2 f xs
 
 filter1 p xs = [x | x <- xs, p x]
 
-f1 = filter (> 5) [1..10] 
+f1 = filter (> 5) [1..10]
 -- [6,7,8,9,10]
 f2 = filter (/= ' ') "abc def ghi"
 -- "abcdefghi"
 
 filter2 f [] = []
-filter2 f (x:xs) 
+filter2 f (x:xs)
     | f x = x: filter2 f xs
     | otherwise = filter2 f xs
 
@@ -105,3 +106,83 @@ reverse1 = foldr (\x xs -> xs ++ [x]) []
 -- foldr (#) v [x0,x1,...,xn] = x0 # (x1 # (... (xn # v) ...))
 
 
+-- foldl
+
+-- he function sum can be redefined in this manner by using an auxiliary function sum’ that takes 
+-- an extra argument v that is used to accumulate the final result:
+sum4 = sum' 0
+    where
+        sum' v [] = v
+        sum' v (x:xs) = sum' (v+x) xs
+
+
+-- many functions on lists can be defined using the following simple pattern of recursion:
+-- f v [] = v
+-- f v (x:xs) = f (v # x) xs
+
+
+-- That is, the function maps the empty list to the accumulator value v, and any non-empty list to the 
+-- result of recursively processing the tail using a new accu- mulator value obtained by applying an operator 
+-- # to the current value and the head of the list
+
+sum5 :: Num a => [a] -> a
+sum5 = foldl (+) 0
+
+reverse3 :: [a] -> [a]
+reverse3 = foldl (\xs x -> x:xs) []
+
+foldl2 f v [] = v
+foldl2 f v (x:xs) = foldl2 f (f v x) xs
+
+-- foldl (#) v [x0,x1,...,xn] = (... ((v # x0) # x1) ...) # xn
+
+-- The composition operator
+-- f . g = \x -> f (g x)
+
+odd2 = not . even
+twice2 f = f . f
+sumsqreven2 = sum . map (^2) . filter even
+
+-- id = \x -> x
+compose :: [a -> a] -> (a -> a)
+compose = foldr (.) id
+
+
+-- Binary string transmitter
+
+type Bit = Int
+
+bin2int bits = sum [w*b | (w,b) <- zip weights bits]
+    where weights = iterate (*2) 1
+
+bin2int2 :: [Bit] -> Int
+bin2int2 = foldr (\x y -> x + 2*y) 0
+
+int2bin 0 = []
+int2bin n = n `mod` 2 : int2bin (n `div` 2)
+
+make8 bits = take 8 (bits ++ repeat 0)
+
+-- We can now define a function that encodes a string of characters as a list of bits by converting each character 
+-- into a Unicode number, converting each such number into an eight-bit binary number, and concatenating each of these 
+-- numbers together to produce a list of bits. Using the higher-order functions map and composition, this conversion 
+-- can be implemented as follows
+
+encode :: String -> [Bit]
+encode = concatMap (make8 . int2bin . ord)
+
+
+chop8 [] = []
+chop8 bits = take 8 bits : chop8 (drop 8 bits)
+decode = map (chr . bin2int) . chop8
+
+
+
+transmit = decode . channel . encode
+channel = id
+
+t = transmit "higher-order functions are easy" 
+-- "higher-order functions are easy"
+
+
+-- Voting algorithms
