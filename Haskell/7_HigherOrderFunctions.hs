@@ -1,6 +1,6 @@
 module HigherOrderFunctions where
 import Data.Char
-
+import Data.List
 
 -- Formally speaking, a function that takes a function as an argument 
 -- or returns a function as a result is called a higher-order function
@@ -186,3 +186,59 @@ t = transmit "higher-order functions are easy"
 
 
 -- Voting algorithms
+-- First past the post
+votes = ["Red", "Blue", "Green", "Blue", "Blue", "Red"]
+
+count x = length . filter (== x)
+c = count "Red" votes 
+-- 2
+
+rmdups [] = []
+rmdups (x:xs) = x : filter (/= x) (rmdups xs)
+
+r = rmdups votes
+-- ["Red", "Blue", "Green"]
+
+result :: Ord a => [a] -> [(Int,a)]
+result vs = sort [(count v vs, v) | v <- rmdups vs]
+
+winner :: Ord a => [a] -> a
+winner = snd . last . result
+
+b = winner votes 
+-- "Blue"
+
+
+-- Alternative vote
+
+ballots = [["Red", "Green"],
+            ["Blue"],
+            ["Green", "Red", "Blue"], 
+            ["Blue", "Green", "Red"], 
+            ["Green"]
+    ]
+
+rmempty :: Eq a => [[a]] -> [[a]]
+rmempty = filter (/= [])
+
+elim x = map (filter (/= x))
+
+
+
+rank :: Ord a => [[a]] -> [a]
+rank = map snd . result . map head
+
+r3 = rank ballots
+-- ["Red", "Blue", "Green"]
+
+
+-- We first remove empty ballots, then rank the remaining 1st-choice can- didates in increasing order of votes. If only one such 
+-- candidate remains, they are the winner, otherwise we eliminate the candidate with the smallest number of 1st-choice votes and 
+-- repeat the process.
+winner' bs = case rank (rmempty bs) of
+            [c] -> c
+            (c:cs) -> winner' (elim c bs)
+
+w1 = winner' ballots 
+-- "Green"
+
